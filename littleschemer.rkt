@@ -53,6 +53,6 @@
         [(eq? (car loa) a) (cdr loa)]
         [else (cons (car loa) (rember a (cdr loa)))]))
 
-;(check-eq? (rember 'mint (list 'lamb 'chops 'and 'mint 'jelly))
-;           (list 'lamb 'chops 'and 'jelly))
+(check-equal? (rember 'mint (list 'lamb 'chops 'and 'mint 'jelly))
+           (list 'lamb 'chops 'and 'jelly) "comparing lists")
 
