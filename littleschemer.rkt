@@ -9,7 +9,19 @@
 (check-equal? (my-and (list true true true)) true)
 (check-equal? (my-and (list true true false true)) false)
 
-;; (a -> Boolean) -> ListOfA -> Boolean
+;; (a -> Boolean) ListOfA -> Boolean 
+;; applied to a predicate and a list. returns true if any of the
+;; elements of the list satisfy the predicate and false otherwise.
+(define (any p xs) (my-or (map p xs)))
+
+;; ListOfBooleans -> Boolean
+;; applied to a list of booleans. returns their logical disjunction.
+(define (my-or xs) (foldr (lambda (a b) (or a b)) false xs))
+
+(check-equal? (my-or (list false false false)) false)
+(check-equal? (my-or (list false true false false)) true)
+
+;; (a -> Boolean)  ListOfA -> Boolean
 ;; takes a predicate and a list, returns true if all elements of the list
 ;; satisfy the predicate and false otherwiese.
 (define (all p xs) (my-and (map p xs)))
@@ -34,6 +46,8 @@
         [else false]))
 
 ;; with pattern matching
+;; ListOfAtom -> Boolean
+;; produces true if a list consists only of atoms
 (define (lat-2? loa)
   (match loa
          ['() true]
@@ -42,6 +56,8 @@
                          false)]))
 
 ;; abstacting it with all 
+;; ListOfAtom -> Boolean
+;; produces true if a list consists only of atoms
 (define (lat-3? loa)
   (all (lambda (x) (atom? x)) loa))
 
@@ -59,14 +75,26 @@
         [(eq? a (car loa)) true]
         [else (member? a (cdr loa))]))
 
-(check-eq? (member? 'poached
-                    (list 'fried 'eggs 'scrambled 'eggs)) false)
-(check-eq? (member? 'meat
-                   (list 'mashed 'potatoes 'and 'meat 'gravy)) true)
+;; with pattern matching
+;; Atom ListOfAtom -> Boolean
+;; produces true if an atom belongs to the provided list and false otherwise
+(define (member-2? a loa)
+  (match loa
+         ['()           false]
+         [(cons hd tl)  (cond [(eq? a hd) true]
+                              [else (member-2? a tl)])]))
+;; abstracting it with any
+;; Atom ListOfAtom -> Boolean
+;; produces true if an atom belongs to the provided list and false otherwise
+(define (member-3? a loa)
+  (any (lambda (x) (eq? x a)) loa))
 
-(check-eq? (member? 'a (list)) false)
-(check-eq? (member? 'a (list 'a)) true)
-(check-eq? (member? 'a (list 1 'b 'a)) true)
+(check-eq? (member? 'poached (list 'fried 'eggs 'scrambled 'eggs)) false)
+(check-eq? (member? 'meat (list 'mashed 'potatoes 'and 'meat 'gravy)) true)
+(check-eq? (member-2? 'poached (list 'fried 'eggs 'scrambled 'eggs)) false)
+(check-eq? (member-2? 'meat (list 'mashed 'potatoes 'and 'meat 'gravy)) true)
+(check-eq? (member-3? 'poached (list 'fried 'eggs 'scrambled 'eggs)) false)
+(check-eq? (member-3? 'meat (list 'mashed 'potatoes 'and 'meat 'gravy)) true)
 
 ;; CONS THE MAGNIFICIENT
 
@@ -80,4 +108,3 @@
 
 (check-equal? (rember 'mint (list 'lamb 'chops 'and 'mint 'jelly))
            (list 'lamb 'chops 'and 'jelly) "comparing lists")
-
