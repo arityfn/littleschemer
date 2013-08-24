@@ -100,7 +100,6 @@
 
 ;; Atom ListOfAtom -> ListOfAtom
 ;; removes the provided atom and produces a new ListOfAtom
-
 (define (rember a loa)
   (cond [(null? loa) true]
         [(eq? (car loa) a) (cdr loa)]
@@ -108,3 +107,26 @@
 
 (check-equal? (rember 'mint (list 'lamb 'chops 'and 'mint 'jelly))
            (list 'lamb 'chops 'and 'jelly) "comparing lists")
+
+;; ListOfLists -> ListOfAtoms
+;; takes a list of lists and produces a new list with the first s-expression
+;; of each internal list
+(define (firsts lol)
+  (cond [(null? lol) '()]
+        [(cons (car (car lol)) (firsts (cdr lol)))]))
+
+(check-equal? (firsts empty) '())
+(check-equal? (firsts (list (list 1 2))) (list 1))
+(check-equal? (firsts (list (list (list'five 'plums) 'four)
+             (list 'eleven 'green 'oranges)
+             (list (list 'no) 'more))) (list (list 'five 'plums)
+                                             'eleven (list 'no)))
+
+;; atom atom ListOfAtoms -> ListOfAtoms
+;; produces a new list in which the old atom is replaced with a new one.
+(define (insertR nw old loa)
+  (cond [(null? loa) empty]
+        [(eq? (car loa) old) (cons nw (cdr loa))]
+        [else (cons (car loa) (insertR nw old (cdr loa)))]))
+
+(insertR 'c 'b (list 'a 'b))
