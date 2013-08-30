@@ -123,10 +123,38 @@
                                              'eleven (list 'no)))
 
 ;; atom atom ListOfAtoms -> ListOfAtoms
-;; produces a new list in which the old atom is replaced with a new one.
-(define (insertR nw old loa)
+;; produces a new list in which the new atom is inserted to the right of the
+;; old atom
+(define (insertR n o loa)
   (cond [(null? loa) empty]
-        [(eq? (car loa) old) (cons nw (cdr loa))]
-        [else (cons (car loa) (insertR nw old (cdr loa)))]))
+        [(equal? o (car loa)) (cons o (cons n (cdr loa)))]
+        [else (cons (car loa) (insertR n o (cdr loa)))]))
 
-(insertR 'c 'b (list 'a 'b))
+(check-equal? (insertR 'topping 'fudge (list 'ice 'cream 'with 'fudge 'for 'dessert))
+              (list 'ice 'cream 'with 'fudge 'topping 'for 'dessert))
+
+;; atom atom ListoOfAtoms -> ListOfAtoms
+;; produces a new list in which the new atom is inserted to the left of the old atom
+(define (insertL n o loa)
+  (cond [(null? loa) empty]
+        [(equal? o (car loa)) (cons n (cons o (cdr loa)))]
+        [else (cons (car loa) (insertL n o (cdr loa)))]))
+
+(check-equal? (insertL 0 1 (list 1 2 3 4 5))
+              (list 0 1 2 3 4 5))
+
+(define (subst n o loa)
+  (cond [(null? loa) empty]
+        [(eq? o (car loa)) (cons n (cdr loa))]
+        [else (cons (car loa) (subst n o (cdr loa)))]))
+
+(check-equal? (subst 'topping 'fudge (list 'ice 'cream 'with 'fudge 'for 'dessert))
+              (list 'ice 'cream 'with 'topping 'for 'dessert))
+
+(define (subst2 n o1 o2 loa)
+  (cond [(null? loa) empty]
+        [(or (eq? o1 (car loa)) (eq? o2 (car loa))) (cons n (cdr loa))]
+        [else (cons (car loa) (subst2 n o1 o2 (cdr loa)))]))
+
+(check-equal? (subst2 'vanilla 'cholate 'banana (list 'banana 'ice 'cream 'with
+                      'chocolate 'topping)) (list 'vanilla 'ice 'cream 'with 'chocolate 'topping))
