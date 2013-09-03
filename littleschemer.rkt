@@ -134,7 +134,7 @@
               (list 'ice 'cream 'with 'fudge 'topping 'for 'dessert))
 
 ;; atom atom ListoOfAtoms -> ListOfAtoms
-;; produces a new list in which the new atom is inserted to the left of the old atom
+;; produces a new list in which t)) new atom is inserted to the left of the old atom
 (define (insertL n o loa)
   (cond [(null? loa) empty]
         [(equal? o (car loa)) (cons n (cons o (cdr loa)))]
@@ -158,3 +158,34 @@
 
 (check-equal? (subst2 'vanilla 'cholate 'banana (list 'banana 'ice 'cream 'with
                       'chocolate 'topping)) (list 'vanilla 'ice 'cream 'with 'chocolate 'topping))
+
+(define (multirember a lat)
+  (cond [(null? lat) empty]
+        [(eq? (car lat) a) (multirember a (cdr lat))]
+        [else (cons (car lat) (multirember a (cdr lat)))]))
+
+(check-equal? (multirember 1 (list 1 2 1 2 1 2))
+              (list 2 2 2))
+(check-equal? (multirember 'cup (list 'coffee 'cup 'tea 'cup 'and 'hick 'cup))
+              (list 'coffee 'tea 'and 'hick))
+
+(define (multiinsertR n o lat)
+  (cond [(null? lat) empty]
+        [(eq? o (car lat)) (cons o (cons n (multiinsertR n o (cdr lat))))]
+        [else (cons (car lat) (multiinsertR n o (cdr lat)))]))
+
+(check-equal? (multiinsertR 1 2 (list 2 2 2)) (list 2 1 2 1 2 1))
+
+(define (multiinsertL n o lat)
+  (cond [(null? lat) empty]
+        [(eq? o (car lat)) (cons n (cons o (multiinsertL n o (cdr lat))))]
+        [else (cons (car lat) (multiinsertL n o (cdr lat)))]))
+
+(check-equal? (multiinsertL 1 2 (list 2 2 2)) (list 1 2 1 2 1 2))
+
+(define (multisubst n o lat)
+  (cond [(null? lat) empty]
+        [(eq? o (car lat)) (cons n (multisubst n o (cdr lat)))]
+        [else (cons (car lat) (multisubst n o (cdr lat)))]))
+
+(check-equal? (multisubst 2 1 (list 2 1 2 1 2 1)) (list 2 2 2 2 2 2))
