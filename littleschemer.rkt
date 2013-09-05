@@ -1,35 +1,22 @@
 #lang racket
 (require rackunit)
 
-;; ListOfBooleans -> Boolean
-;; takes a listOfBooleans and produces true if all the elements
-;; are true and false otherwise
 (define (my-and xs) (foldr (lambda (a b) (and a b)) true xs))
 
 (check-equal? (my-and (list true true true)) true)
 (check-equal? (my-and (list true true false true)) false)
 
-;; (a -> Boolean) ListOfA -> Boolean 
-;; applied to a predicate and a list. returns true if any of the
-;; elements of the list satisfy the predicate and false otherwise.
 (define (any p xs) (my-or (map p xs)))
 
-;; ListOfBooleans -> Boolean
-;; applied to a list of booleans. returns their logical disjunction.
 (define (my-or xs) (foldr (lambda (a b) (or a b)) false xs))
 
 (check-equal? (my-or (list false false false)) false)
 (check-equal? (my-or (list false true false false)) true)
 
-;; (a -> Boolean)  ListOfA -> Boolean
-;; takes a predicate and a list, returns true if all elements of the list
-;; satisfy the predicate and false otherwiese.
 (define (all p xs) (my-and (map p xs)))
 
 (check-equal? (all (lambda (x) (< x 11)) (range 0 11)) true)
 
-;; Atom -> Boolean
-;; produces true if the argument provided is an atom and false otherwise
 (define (atom? x)
   (and (not (pair? x)) (not (null? x))))
 
@@ -38,16 +25,11 @@
 (check-eq? (atom? (cons 'b empty)) false)
 (check-eq? (atom? 1) true)
 
-;; ListOfAtom -> Boolean
-;; produces true if a list consists only of atoms
 (define (lat? loa)
   (cond [(null? loa) true]
         [(atom? (car loa)) (lat? (cdr loa))]
         [else false]))
 
-;; with pattern matching
-;; ListOfAtom -> Boolean
-;; produces true if a list consists only of atoms
 (define (lat-2? loa)
   (match loa
          ['() true]
@@ -55,9 +37,6 @@
                          (lat-2? tl)
                          false)]))
 
-;; abstacting it with all 
-;; ListOfAtom -> Boolean
-;; produces true if a list consists only of atoms
 (define (lat-3? loa)
   (all (lambda (x) (atom? x)) loa))
 
@@ -68,24 +47,17 @@
 (check-eq? (lat-3? (list 'bacon (list 'and 'eggs))) false)
 (check-eq? (lat-3? (list 'bacon 'and 'eggs)) true)
 
-;; Atom ListOfAtom -> Boolean
-;; produces true if an atom belongs to the provided list and false otherwise
 (define (member? a loa)
   (cond [(null? loa) false]
         [(eq? a (car loa)) true]
         [else (member? a (cdr loa))]))
 
-;; with pattern matching
-;; Atom ListOfAtom -> Boolean
-;; produces true if an atom belongs to the provided list and false otherwise
 (define (member-2? a loa)
   (match loa
          ['()           false]
          [(cons hd tl)  (cond [(eq? a hd) true]
                               [else (member-2? a tl)])]))
-;; abstracting it with any
-;; Atom ListOfAtom -> Boolean
-;; produces true if an atom belongs to the provided list and false otherwise
+
 (define (member-3? a loa)
   (any (lambda (x) (eq? x a)) loa))
 
@@ -97,9 +69,6 @@
 (check-eq? (member-3? 'meat (list 'mashed 'potatoes 'and 'meat 'gravy)) true)
 
 ;; CONS THE MAGNIFICIENT
-
-;; Atom ListOfAtom -> ListOfAtom
-;; removes the provided atom and produces a new ListOfAtom
 (define (rember a loa)
   (cond [(null? loa) true]
         [(eq? (car loa) a) (cdr loa)]
@@ -108,23 +77,17 @@
 (check-equal? (rember 'mint (list 'lamb 'chops 'and 'mint 'jelly))
            (list 'lamb 'chops 'and 'jelly) "comparing lists")
 
-;; ListOfLists -> ListOfAtoms
-;; takes a list of lists and produces a new list with the first s-expression
-;; of each internal list
 (define (firsts lol)
   (cond [(null? lol) '()]
         [(cons (car (car lol)) (firsts (cdr lol)))]))
 
 (check-equal? (firsts empty) '())
 (check-equal? (firsts (list (list 1 2))) (list 1))
-(check-equal? (firsts (list (list (list'five 'plums) 'four)
+(check-equal? (firsts (list (list (list 'five 'plums) 'four)
              (list 'eleven 'green 'oranges)
              (list (list 'no) 'more))) (list (list 'five 'plums)
                                              'eleven (list 'no)))
 
-;; atom atom ListOfAtoms -> ListOfAtoms
-;; produces a new list in which the new atom is inserted to the right of the
-;; old atom
 (define (insertR n o loa)
   (cond [(null? loa) empty]
         [(equal? o (car loa)) (cons o (cons n (cdr loa)))]
@@ -133,8 +96,6 @@
 (check-equal? (insertR 'topping 'fudge (list 'ice 'cream 'with 'fudge 'for 'dessert))
               (list 'ice 'cream 'with 'fudge 'topping 'for 'dessert))
 
-;; atom atom ListoOfAtoms -> ListOfAtoms
-;; produces a new list in which t)) new atom is inserted to the left of the old atom
 (define (insertL n o loa)
   (cond [(null? loa) empty]
         [(equal? o (car loa)) (cons n (cons o (cdr loa)))]
@@ -189,3 +150,65 @@
         [else (cons (car lat) (multisubst n o (cdr lat)))]))
 
 (check-equal? (multisubst 2 1 (list 2 1 2 1 2 1)) (list 2 2 2 2 2 2))
+
+; chapter 3 - Number games
+(define (- a b)
+  (cond [(zero? b) a]
+        [else (sub1 (- a (sub1 b)))]))
+
+(check-equal? (- 1 1 ) 0)
+(check-equal? (- 2 1 ) 1)
+(check-equal? (- 2 1 ) 1)
+(check-equal? (- 0 0 ) 0)
+
+(define (+ a b)
+  (cond [(zero? b) a]
+        [else (add1 (+ a (sub1 b)))]))
+
+; my version
+(define (my-+ a b)
+  (if (zero? b)
+    a
+    (+ 1 (my-+ a (- b 1)))))
+
+(check-equal? (+ 7 0) 7)
+(check-equal? (+ 7 1) 8)
+(check-equal? (+ 0 0) 0)
+(check-equal? (+ 0 0) 0)
+(check-equal? (+ 0 1) 1)
+
+(check-equal? (my-+ 7 0) 7)
+(check-equal? (my-+ 7 1) 8)
+(check-equal? (my-+ 0 0) 0)
+(check-equal? (my-+ 0 0) 0)
+(check-equal? (my-+ 0 1) 1)
+
+(define (addtup tup)
+  (cond [(null? tup) 0]
+        [else (+ (addtup (cdr tup)) (car tup))]))
+
+(check-equal? (addtup empty) 0)
+(check-equal? (addtup (list 1)) 1)
+(check-equal? (addtup (list 1 2)) 3)
+(check-equal? (addtup (list 1 2 3)) 6)
+(check-equal? (addtup (list 1 2 3 0)) 6)
+
+(define (x a b)
+  (cond [(zero? b) 0]
+        [else (+ a (x a (sub1 b)))]))
+
+(check-equal? (x 0 0) 0)
+(check-equal? (x 0 1) 0)
+(check-equal? (x 1 1) 1)
+(check-equal? (x 2 1) 2)
+(check-equal? (x 5 5) 25)
+
+(define (tup+ l1 l2)
+  (cond [(and (null? l1)
+              (null? l2)) empty]
+        [else (cons (+ (car l1) (car l2))
+                    (tup+ (cdr l1) (cdr l2)))]))
+
+(check-equal? (tup+ empty empty) empty)
+(check-equal? (tup+ (list 1) (list 1)) (list 2))
+(check-equal? (tup+ (list 2 2 1) (list 2 2 1)) (list 4 4 2))
