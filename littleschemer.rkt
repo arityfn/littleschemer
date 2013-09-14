@@ -193,7 +193,7 @@
 (check-equal? (addtup (list 1 2 3)) 6)
 (check-equal? (addtup (list 1 2 3 0)) 6)
 
-define (x a b)
+(define (x a b)
  (cond [(zero? b) 0]
        [else (+ a (x a (sub1 b)))]))
 
@@ -233,15 +233,15 @@ define (x a b)
 (check-equal? (> 0 2) false)
 (check-equal? (> 3 3) false)
 
-(define (< a b)
+(define (my-< a b)
   (cond [(zero? b) false]
         [(zero? a) true]
-        [else (< (sub1 a) (sub1 b))]))
+        [else (my-< (sub1 a) (sub1 b))]))
 
-(check-equal? (< 0 1) true)
-(check-equal? (< 1 0) false)
-(check-equal? (< 1 1) false)
-(check-equal? (< 6 6) false)
+(check-equal? (my-< 0 1) true)
+(check-equal? (my-< 1 0) false)
+(check-equal? (my-< 1 1) false)
+(check-equal? (my-< 6 6) false)
 
 (define (= a b)
   (cond [(and (zero? a) (zero? b)) true]
@@ -292,6 +292,15 @@ define (x a b)
 
 (define (no-nums lat)
   (cond [(null? lat) empty]
-        [(number? (car lat)) ]))
+        [(number? (car lat)) (no-nums (cdr lat))]
+        [else (cons (car lat) (no-nums (cdr lat)))]))
 
-(check-equal? (no-nums (5 'a 3 'b 4 'c)))
+(check-equal? (no-nums (list 5 'a 3 'b 4 'c)) (list 'a 'b 'c))
+
+(define (all-nums lat)
+  (cond [(null? lat) empty]
+        [(number? (car lat)) (cons (car lat) (all-nums (cdr lat)))]
+        [else (all-nums (cdr lat))]))
+
+
+(check-equal? (all-nums (list 5 'a 3 'b 4 'c)) (list 5 3 4))
