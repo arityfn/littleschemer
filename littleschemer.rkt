@@ -304,3 +304,32 @@
 
 
 (check-equal? (all-nums (list 5 'a 3 'b 4 'c)) (list 5 3 4))
+
+(define eqan?
+  (lambda (a1 a2)
+    (cond ((and (number? a1) (number? a2))( =  a1 a2))
+      ((or (number? a1) (number? a2)) #f)
+      (else (eq? a1 a2)))))
+
+
+(define (occur a lat)
+  (cond [(null? lat) 0]
+        [(eqan? (car lat) a) (+ 1 (occur a (cdr lat)))]
+        [else (occur a (cdr lat))]))
+
+(define (one? n)
+  (if (zero? n) false (zero? (sub1 n))))
+
+(check-equal? (one? 1) true)
+(check-equal? (one? 0) false)
+(check-equal? (one? 4) false)
+
+(check-equal? (occur 1 (list 1 2 3 4 1 4 5 1 1)) 4)
+
+(define (rempick-2 n lat)
+  (cond [(one? n) (cdr lat)]
+        (else (cons (car lat)
+                    (rempick-2 (sub1 n) (cdr lat))))))
+
+(check-equal? (rempick-2 3 (list 'lemon 'merengue 'salty 'pie))
+              (list 'lemon 'merengue 'pie))
