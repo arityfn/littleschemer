@@ -333,3 +333,63 @@
 
 (check-equal? (rempick-2 3 (list 'lemon 'merengue 'salty 'pie))
               (list 'lemon 'merengue 'pie))
+
+(define (rember* a l)
+  (cond [(null? l) empty]
+        [(atom? (car l))
+         (cond [(eq? (car l) a) (rember* a (cdr l))]
+               [else (cons (car l) (rember* a (cdr l)))])]
+        [else (cons (rember* a (car l))
+                    (rember* a (cdr l)))]))
+
+
+(define (exists? a l)
+  (cond [(null? l) false]
+        [(atom? (car l))
+         (cond [(eq? (car l) a) true]
+               [else (exists? a (cdr l))])]
+        [else (cond [(exists? a (car l)) true]
+                    [else (exists? a (cdr l))])]))
+
+(check-equal? (exists? 'cup (list 'cup)) true)
+(check-equal? (exists? 'cup (list (list 'cup))) true)
+
+(define (insertR* n o l)
+  (cond [(null? l) empty]
+        [(atom? (car l))
+         (cond [(eq? o (car l)) (cons o (cons n (cdr l)))]
+               [else (cons (car l) (insertR* n o (cdr l)))])]
+        [else (cons (insertR* n o (car l))
+                    (insertR* n o (cdr l)))]))
+
+(check-equal? (insertR* "second" "first" (list "first")) (list "first" "second"))
+(check-equal? (insertR* 2 1 (list (list (list 1)))) (list (list (list 1 2))))
+
+(define (occur* a l)
+  (cond [(null? l) 0]
+        [(atom? (car l))
+         (cond [(eqan? (car l) a) (+ 1 (occur* a (cdr l)))]
+               [else (occur* a (cdr l))])]
+        [else (+ (occur* a (car l))
+                 (occur* a (cdr l)))]))
+
+(check-equal? (occur* 1 (list 1)) 1)
+(check-equal? (occur* 1 (list (list 1))) 1)
+
+
+;(define (subst n o loa)
+;  (cond [(null? loa) empty]
+;        [(eq? o (car loa)) (cons n (cdr loa))]
+;        [else (cons (car loa) (subst n o (cdr loa)))]))
+;
+
+(define (subst* n o l)
+  (cond [(null? l) empty]
+        [(atom? (car l))
+         (cond [(eq? o (car l)) (cons n (subst* n o (cdr l)))]
+               [else (cons (car l) (subst* n o (cdr l)))])]
+        [else (cons (subst* n o (car l))
+                    (subst* n o (cdr l)))]))
+
+(check-equal? (subst* "new" "old" (list "old")) (list "new"))
+(check-equal? (subst* "new" "old" (list (list (list "old")))) (list (list (list "new"))))
