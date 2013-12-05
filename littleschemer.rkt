@@ -1,395 +1,252 @@
 #lang racket
+
 (require rackunit)
-
-(define (my-and xs) (foldr (lambda (a b) (and a b)) true xs))
-
-(check-equal? (my-and (list true true true)) true)
-(check-equal? (my-and (list true true false true)) false)
-
-(define (any p xs) (my-or (map p xs)))
-
-(define (my-or xs) (foldr (lambda (a b) (or a b)) false xs))
-
-(check-equal? (my-or (list false false false)) false)
-(check-equal? (my-or (list false true false false)) true)
-
-(define (all p xs) (my-and (map p xs)))
-
-(check-equal? (all (lambda (x) (< x 11)) (range 0 11)) true)
 
 (define (atom? x)
   (and (not (pair? x)) (not (null? x))))
 
-(check-eq? (atom? (quote ())) false)
-(check-eq? (atom? 'a) true)
-(check-eq? (atom? (cons 'b empty)) false)
-(check-eq? (atom? 1) true)
+                        ;; 1. Toys
+;; The Law of Car
+;; The primite car is defined only for non-empty lists.
 
-(define (lat? loa)
-  (cond [(null? loa) true]
-        [(atom? (car loa)) (lat? (cdr loa))]
+(check-equal? (car (list 1 2 3 4)) 1)
+(check-equal? (car (list "a" "b" "c")) "a")
+(check-equal? (car (list (list 1) 1 2 3)) (list 1))
+
+;; The law of Cdr
+;; the primitive cdr is definedonly for non-empty lists.
+;; the cdr of any non-empty list is always another list.
+
+(check-equal? (cdr (list 1 2)) (list 2))
+(check-equal? (cdr (list 1 2 3)) (list 2 3))
+
+;;The law of Cons
+;; The primitieve cons takes two argumetns.
+;; the second argumetns to cons bust be a a list.
+;; the result is a list.
+
+(check-equal? (cons 1 empty) (list 1))
+(check-equal? (cons 1 (list 2)) (list 1 2))
+
+;; The law of Null?
+;; the primitive null? is defined only for lists.
+
+(check-equal? (null? empty) true)
+(check-equal? (null? (list 1)) false)
+(check-equal? (null? (list (list ))) false)
+
+;; The Law of Eq?
+;; The primitive eq? takes two arguments. Each be be
+; a non-numeric atom.
+
+(check-equal? (eq? "a" "a" ) true)
+(check-equal? (eq? "a" "aa" ) false)
+                                
+                    ;; 2. Do it, do it again, and again, and again.
+(define (lat? l) 
+  (cond [(empty? l) true]
+        [(atom? (car l)) (lat? (cdr l))]
         [else false]))
 
-(define (lat-2? loa)
-  (match loa
-         ['() true]
-         [(cons hd tl) (if (atom? hd)
-                         (lat-2? tl)
-                         false)]))
+(check-equal? (lat? empty) true)
+(check-equal? (lat? (list 1)) true)
+(check-equal? (lat? (list 1 (list 2))) false)
 
-(define (lat-3? loa)
-  (all (lambda (x) (atom? x)) loa))
+(define (member? a l)
+  (cond [(empty? l) false]
+        [(eq? a (car l)) true]
+        [else (member? a (cdr l))]))
 
-(check-eq? (lat? (list 'bacon (list 'and 'eggs))) false)
-(check-eq? (lat? (list 'bacon 'and 'eggs)) true)
-(check-eq? (lat-2? (list 'bacon (list 'and 'eggs))) false)
-(check-eq? (lat-2? (list 'bacon 'and 'eggs)) true)
-(check-eq? (lat-3? (list 'bacon (list 'and 'eggs))) false)
-(check-eq? (lat-3? (list 'bacon 'and 'eggs)) true)
+(check-equal? (member? 1 empty) false)
+(check-equal? (member? 1 (list 1)) true)
+(check-equal? (member? 1 (list 3 2 1)) true)
 
-(define (member? a loa)
-  (cond [(null? loa) false]
-        [(eq? a (car loa)) true]
-        [else (member? a (cdr loa))]))
+;; The First Commandment (preliminary)
+;; Alwayas ask null? as the first question in expressing any function.
 
-(define (member-2? a loa)
-  (match loa
-         ['()           false]
-         [(cons hd tl)  (cond [(eq? a hd) true]
-                              [else (member-2? a tl)])]))
+                        ;; 3. Cons the Magnificient.
 
-(define (member-3? a loa)
-  (any (lambda (x) (eq? x a)) loa))
+(define (rember a lat)
+  (cond [(null? lat) empty]
+        [(eq? a (car lat)) (cdr lat)]
+        [else (cons (car lat) (rember a (cdr lat)))]))
 
-(check-eq? (member? 'poached (list 'fried 'eggs 'scrambled 'eggs)) false)
-(check-eq? (member? 'meat (list 'mashed 'potatoes 'and 'meat 'gravy)) true)
-(check-eq? (member-2? 'poached (list 'fried 'eggs 'scrambled 'eggs)) false)
-(check-eq? (member-2? 'meat (list 'mashed 'potatoes 'and 'meat 'gravy)) true)
-(check-eq? (member-3? 'poached (list 'fried 'eggs 'scrambled 'eggs)) false)
-(check-eq? (member-3? 'meat (list 'mashed 'potatoes 'and 'meat 'gravy)) true)
 
-;; CONS THE MAGNIFICIENT
-(define (rember a loa)
-  (cond [(null? loa) true]
-        [(eq? (car loa) a) (cdr loa)]
-        [else (cons (car loa) (rember a (cdr loa)))]))
+(check-equal? (rember 1 empty) empty)
+(check-equal? (rember 1 (list 1)) empty)
+(check-equal? (rember 1 (list 1 2)) (list 2))
 
-(check-equal? (rember 'mint (list 'lamb 'chops 'and 'mint 'jelly))
-           (list 'lamb 'chops 'and 'jelly) "comparing lists")
+;; The Second Commandment
+;; Use cons to buid lists.
 
-(define (firsts lol)
-  (cond [(null? lol) '()]
-        [(cons (car (car lol)) (firsts (cdr lol)))]))
+(define (firsts l)
+  (cond [(null? l) empty]
+        [else (cons (car (car l)) (firsts (cdr l)))]))
 
-(check-equal? (firsts empty) '())
-(check-equal? (firsts (list (list 1 2))) (list 1))
-(check-equal? (firsts (list (list (list 'five 'plums) 'four)
-             (list 'eleven 'green 'oranges)
-             (list (list 'no) 'more))) (list (list 'five 'plums)
-                                             'eleven (list 'no)))
+(check-equal? (firsts empty) empty)
+(check-equal? (firsts (list (list 1))) (list 1))
+(check-equal? (firsts (list (list 1 22) (list 2 3) (list 3 3))) (list 1 2 3))
 
-(define (insertR n o loa)
-  (cond [(null? loa) empty]
-        [(equal? o (car loa)) (cons o (cons n (cdr loa)))]
-        [else (cons (car loa) (insertR n o (cdr loa)))]))
+;; The Third Commandment
+;; When building a list, describe the first typical element, 
+;; and then cons it on the the natural recursion.
 
-(check-equal? (insertR 'topping 'fudge (list 'ice 'cream 'with 'fudge 'for 'dessert))
-              (list 'ice 'cream 'with 'fudge 'topping 'for 'dessert))
+(define (insertR n o lat)
+  (cond [(empty? lat) empty]
+        [(eq? o (car lat)) (cons n (cons o ( cdr lat)))]
+        [else (insertR (n o (cdr lat)))]))
 
-(define (insertL n o loa)
-  (cond [(null? loa) empty]
-        [(equal? o (car loa)) (cons n (cons o (cdr loa)))]
-        [else (cons (car loa) (insertL n o (cdr loa)))]))
+(check-equal? (insertR 1 2 empty) empty) 
+(check-equal? (insertR 1 2 (list 2 3)) (list 1 2 3))
+(check-equal? (insertR "a" "b" (list "b" "c")) (list "a" "b" "c"))
 
-(check-equal? (insertL 0 1 (list 1 2 3 4 5))
-              (list 0 1 2 3 4 5))
+(define (insertL n o lat)
+  (cond [(empty? lat) empty]
+        [(eq? o (car lat)) (cons o (cons n (cdr lat)))]
+        [else (cons (car lat) (insertL n o (cdr lat)))]))
 
-(define (subst n o loa)
-  (cond [(null? loa) empty]
-        [(eq? o (car loa)) (cons n (cdr loa))]
-        [else (cons (car loa) (subst n o (cdr loa)))]))
+(check-equal? (insertL "c" "b"  empty) empty)
+(check-equal? (insertL "c" "b" (list "a" "b")) (list "a" "b" "c"))
 
-(check-equal? (subst 'topping 'fudge (list 'ice 'cream 'with 'fudge 'for 'dessert))
-              (list 'ice 'cream 'with 'topping 'for 'dessert))
+(define (subst n o lat)
+  (cond [(empty? lat) empty]
+        [(eq? o (car lat)) (cons n (cdr lat))]
+        [else (cons (car lat) (subst n o (cdr lat)))]))
 
-(define (subst2 n o1 o2 loa)
-  (cond [(null? loa) empty]
-        [(or (eq? o1 (car loa)) (eq? o2 (car loa))) (cons n (cdr loa))]
-        [else (cons (car loa) (subst2 n o1 o2 (cdr loa)))]))
+(check-equal? (subst "new" "old" empty) empty)
+(check-equal? (subst "new" "old" (list "old" "hello")) (list "new" "hello")) 
 
-(check-equal? (subst2 'vanilla 'cholate 'banana (list 'banana 'ice 'cream 'with
-                      'chocolate 'topping)) (list 'vanilla 'ice 'cream 'with 'chocolate 'topping))
+(define (subst2 n o1 o2 lat)
+  (cond [(empty? lat) empty]
+        [(or (eq? o1 (car lat))
+             (eq? o2 (car lat))) (cons n (cdr lat))]
+        [else (cons (car lat) (subst2 n o1 o2 (cdr lat)))]))
+
+(check-equal? (subst2 "new" "old1" "old2" empty) empty)
+(check-equal? (subst2 "new" "old1" "old2" (list "old1" "old2")) (list "new" "old2"))
+(check-equal? (subst2 "vanilla" "chocolate" "banana"
+                      (list "banana" "ice" "cream" "with" "chocolate" "topping"))
+              (list "vanilla" "ice" "cream" "with" "chocolate" "topping"))
 
 (define (multirember a lat)
-  (cond [(null? lat) empty]
-        [(eq? (car lat) a) (multirember a (cdr lat))]
+  (cond [(empty? lat) empty]
+        [(eq? a (car lat)) (multirember a (cdr lat))]
         [else (cons (car lat) (multirember a (cdr lat)))]))
 
-(check-equal? (multirember 1 (list 1 2 1 2 1 2))
-              (list 2 2 2))
-(check-equal? (multirember 'cup (list 'coffee 'cup 'tea 'cup 'and 'hick 'cup))
-              (list 'coffee 'tea 'and 'hick))
+(check-equal? (multirember "a" empty) empty)
+(check-equal? (multirember "a" (list "a")) empty)
+(check-equal? (multirember "a" (list "a" "b" "a" "c" "a"))
+              (list "b" "c"))
 
 (define (multiinsertR n o lat)
-  (cond [(null? lat) empty]
+  (cond [(empty? lat) empty]
         [(eq? o (car lat)) (cons o (cons n (multiinsertR n o (cdr lat))))]
         [else (cons (car lat) (multiinsertR n o (cdr lat)))]))
 
-(check-equal? (multiinsertR 1 2 (list 2 2 2)) (list 2 1 2 1 2 1))
+(check-equal? (multiinsertR "new" "old" empty) empty)
+(check-equal? (multiinsertR  "new" "old" (list "old" "old" "old"))
+              (list "old" "new" "old" "new" "old" "new"))
 
 (define (multiinsertL n o lat)
-  (cond [(null? lat) empty]
+  (cond [(empty? lat) empty]
         [(eq? o (car lat)) (cons n (cons o (multiinsertL n o (cdr lat))))]
         [else (cons (car lat) (multiinsertL n o (cdr lat)))]))
 
-(check-equal? (multiinsertL 1 2 (list 2 2 2)) (list 1 2 1 2 1 2))
+(check-equal? (multiinsertL "new" "old" empty) empty)
+(check-equal? (multiinsertL  "new" "old" (list "old" "old" "old"))
+              (list "new" "old" "new" "old" "new" "old"))
+
+;; The fourth Commandment (preliminary)
+;; Always change at least one argument while recurring.
+;; It must be changed to be closer to termination. The changing
+;; argument must be tested in the termination condition:
+;; when using cdr, test terminationwith null?.
 
 (define (multisubst n o lat)
-  (cond [(null? lat) empty]
+  (cond [(empty? lat) empty]
         [(eq? o (car lat)) (cons n (multisubst n o (cdr lat)))]
         [else (cons (car lat) (multisubst n o (cdr lat)))]))
 
-(check-equal? (multisubst 2 1 (list 2 1 2 1 2 1)) (list 2 2 2 2 2 2))
+(check-equal? (multisubst "new" "old" empty) empty)
+(check-equal? (multisubst "new" "old" (list "old" 1 "old" 1))
+              (list "new" 1 "new" 1))
 
-; chapter 3 - Number games
-(define (- a b)
+                ;; Number Games
+
+(define (my-add a b)
   (cond [(zero? b) a]
-        [else (sub1 (- a (sub1 b)))]))
+        [else (my-add (add1 a) (sub1 b))]))
 
-(check-equal? (- 1 1 ) 0)
-(check-equal? (- 2 1 ) 1)
-(check-equal? (- 2 1 ) 1)
-(check-equal? (- 0 0 ) 0)
+(check-equal? (my-add 5 0) 5)
+(check-equal? (my-add 0 0) 0)
+(check-equal? (my-add 5 5) 10)
+(check-equal? (my-add 5 6) 11)
 
-(define (+ a b)
+(define (my-minus a b)
   (cond [(zero? b) a]
-        [else (add1 (+ a (sub1 b)))]))
+        [else (sub1 (my-minus a (sub1 b)))]))
 
-; my version
-(define (my-+ a b)
-  (if (zero? b)
-    a
-    (+ 1 (my-+ a (- b 1)))))
+(check-equal? (my-minus 0 0) 0)
+(check-equal? (my-minus 5 0) 5)
+(check-equal? (my-minus 5 5) 0)
+(check-equal? (my-minus 10 5) 5)
 
-(check-equal? (+ 7 0) 7)
-(check-equal? (+ 7 1) 8)
-(check-equal? (+ 0 0) 0)
-(check-equal? (+ 0 0) 0)
-(check-equal? (+ 0 1) 1)
-
-(check-equal? (my-+ 7 0) 7)
-(check-equal? (my-+ 7 1) 8)
-(check-equal? (my-+ 0 0) 0)
-(check-equal? (my-+ 0 0) 0)
-(check-equal? (my-+ 0 1) 1)
+;; The First Commandment (first revision)
+;; When recurring ona list of atoms, lat, ask two questions
+;; about it: (null? lat) and else
+;; when recurring on a number, n, ask two questions
+;; about it: (zero? n) and else.
 
 (define (addtup tup)
-  (cond [(null? tup) 0]
-        [else (+ (addtup (cdr tup)) (car tup))]))
+  (cond [(empty? tup) 0]
+        [else (my-add (car tup) (addtup (cdr tup)))]))
 
 (check-equal? (addtup empty) 0)
 (check-equal? (addtup (list 1)) 1)
-(check-equal? (addtup (list 1 2)) 3)
+(check-equal? (addtup (list 1 3)) 4)
 (check-equal? (addtup (list 1 2 3)) 6)
-(check-equal? (addtup (list 1 2 3 0)) 6)
 
-(define (x a b)
- (cond [(zero? b) 0]
-       [else (+ a (x a (sub1 b)))]))
+;; The Fourth Commandment
+;; Always change at least one argumetn while recurring. It
+;; must be changed to be close to terminaton. The changing
+;; argument must be tested in the termination condition:
+;; when using cdr, test termination with null?
+;; and when using sub1, test termination with zero?
 
-(check-equal? (x 0 0) 0)
-(check-equal? (x 0 1) 0)
-(check-equal? (x 1 1) 1)
-(check-equal? (x 2 1) 2)
-(check-equal? (x 5 5) 25)
+(define (my-mult a b)
+  (cond [(zero? b) 0]
+        [else (my-add a (my-mult a (sub1 b)))]))
 
-(define (tup+ l1 l2)
-  (cond [(and (null? l1)
-              (null? l2)) empty]
-        [else (cons (+ (car l1) (car l2))
-                    (tup+ (cdr l1) (cdr l2)))]))
+(check-equal? (my-mult 0 0) 0)
+(check-equal? (my-mult 1 1) 1)
+(check-equal? (my-mult 1 2) 2)
+(check-equal? (my-mult 5 5) 25)
+(check-equal? (my-mult 10 5) 50)
+
+;; The Fifth Commandment
+;; When building a value with +, always use 0 for the value of the
+;; termination line, for adding 0 does not change the value of an
+;; addition.
+
+;; When building a value with x, always use 1 for the value of the
+;; terminating line, for multiplying by 1 does not change the value
+;; of a multiplication.
+
+;; when building a value with cons, always consider () for the value
+;; of the terminatin line.
+
+(define (tup+ tup1 tup2)
+  (cond [(and (empty? tup1) (empty? tup2)) empty]
+        [else (cons (my-add (car tup1) (car tup2))
+                    (tup+ (cdr tup1) (cdr tup2)))]))
 
 (check-equal? (tup+ empty empty) empty)
-(check-equal? (tup+ (list 1) (list 1)) (list 2))
-(check-equal? (tup+ (list 2 2 1) (list 2 2 1)) (list 4 4 2))
+(check-equal? (tup+ (list 3 6 9 11 4)
+                    (list 8 5 2 0 7)) (list 11 11 11 11 11))
 
-;; improved tup+ that works on lists of different length
-(define (imp-tup+ l1 l2)
-  (cond [(null? l1) l2]
-        [(null? l2) l1]
-        [else (cons (+ (car l1) (car l2))
-                    (imp-tup+ (cdr l1) (cdr l2)))]))
-
-(check-equal? (imp-tup+ empty empty) empty)
-(check-equal? (imp-tup+ empty (list 1)) (list 1))
-(check-equal? (imp-tup+ (list 2 2) (list 2 2)) (list 4 4))
-
-(define (> a b)
-  (cond [(zero? a) false]
+(define (my-greater-than a b)
+  (cond [(zero? a) false] 
         [(zero? b) true]
-        [else (> (sub1 a) (sub1 b))]))
+        [else (my-greater-than (sub1 a) (sub1 b))]))
 
-(check-equal? (> 2 0) true)
-(check-equal? (> 0 2) false)
-(check-equal? (> 3 3) false)
-
-(define (my-< a b)
-  (cond [(zero? b) false]
-        [(zero? a) true]
-        [else (my-< (sub1 a) (sub1 b))]))
-
-(check-equal? (my-< 0 1) true)
-(check-equal? (my-< 1 0) false)
-(check-equal? (my-< 1 1) false)
-(check-equal? (my-< 6 6) false)
-
-(define (= a b)
-  (cond [(and (zero? a) (zero? b)) true]
-        [(or (zero? a) (zero? b)) false]
-        [else (= (sub1 a) (sub1 b))]))
-
-(check-equal? (= 0 0) true)
-(check-equal? (= 1 1) true)
-(check-equal? (= 2 1) false)
-(check-equal? (= 1 2) false)
-
-(define (pow a b)
-  (cond [(zero? b) 1]
-        [else (x a (pow a (sub1 b)))]))
-
-(check-equal? (pow 1 1) 1)
-(check-equal? (pow 2 3) 8)
-(check-equal? (pow 5 3) 125)
-
-(define (/ a b)
-  (cond [(< a b) 0]
-        [else (add1 (/ (- a b) b))]))
-
-(check-equal? (/ 15 4) 3) 
-
-(define (length loa)
-  (cond [(null? loa) 0]
-        [else (+  1 (length (cdr loa)))]))
-
-(check-equal? (length empty) 0)
-(check-equal? (length (list 1 2 3 4 5)) 5)
-
-(define (pick n lat)
-  (cond [(zero? (sub1 n)) (car lat)]
-        [else (pick (sub1 n) (cdr lat))]))
-
-(check-equal? (pick 4 (list 'lasgna 'spaghetti 'ravioli
-                            'macaroni 'meatball))
-              'macaroni)
-
-(define (rempick n lat)
-  (cond [(zero? (sub1 n)) (cdr lat)]
-        (else (cons (car lat)
-                    (rempick (sub1 n) (cdr lat))))))
-
-(check-equal? (rempick 3 (list 'hotdogs 'with 'hot 'mustard))
-              (list 'hotdogs 'with 'mustard))
-
-(define (no-nums lat)
-  (cond [(null? lat) empty]
-        [(number? (car lat)) (no-nums (cdr lat))]
-        [else (cons (car lat) (no-nums (cdr lat)))]))
-
-(check-equal? (no-nums (list 5 'a 3 'b 4 'c)) (list 'a 'b 'c))
-
-(define (all-nums lat)
-  (cond [(null? lat) empty]
-        [(number? (car lat)) (cons (car lat) (all-nums (cdr lat)))]
-        [else (all-nums (cdr lat))]))
-
-
-(check-equal? (all-nums (list 5 'a 3 'b 4 'c)) (list 5 3 4))
-
-(define eqan?
-  (lambda (a1 a2)
-    (cond ((and (number? a1) (number? a2))( =  a1 a2))
-      ((or (number? a1) (number? a2)) #f)
-      (else (eq? a1 a2)))))
-
-
-(define (occur a lat)
-  (cond [(null? lat) 0]
-        [(eqan? (car lat) a) (+ 1 (occur a (cdr lat)))]
-        [else (occur a (cdr lat))]))
-
-(define (one? n)
-  (if (zero? n) false (zero? (sub1 n))))
-
-(check-equal? (one? 1) true)
-(check-equal? (one? 0) false)
-(check-equal? (one? 4) false)
-
-(check-equal? (occur 1 (list 1 2 3 4 1 4 5 1 1)) 4)
-
-(define (rempick-2 n lat)
-  (cond [(one? n) (cdr lat)]
-        (else (cons (car lat)
-                    (rempick-2 (sub1 n) (cdr lat))))))
-
-(check-equal? (rempick-2 3 (list 'lemon 'merengue 'salty 'pie))
-              (list 'lemon 'merengue 'pie))
-
-(define (rember* a l)
-  (cond [(null? l) empty]
-        [(atom? (car l))
-         (cond [(eq? (car l) a) (rember* a (cdr l))]
-               [else (cons (car l) (rember* a (cdr l)))])]
-        [else (cons (rember* a (car l))
-                    (rember* a (cdr l)))]))
-
-
-(define (exists? a l)
-  (cond [(null? l) false]
-        [(atom? (car l))
-         (cond [(eq? (car l) a) true]
-               [else (exists? a (cdr l))])]
-        [else (cond [(exists? a (car l)) true]
-                    [else (exists? a (cdr l))])]))
-
-(check-equal? (exists? 'cup (list 'cup)) true)
-(check-equal? (exists? 'cup (list (list 'cup))) true)
-
-(define (insertR* n o l)
-  (cond [(null? l) empty]
-        [(atom? (car l))
-         (cond [(eq? o (car l)) (cons o (cons n (cdr l)))]
-               [else (cons (car l) (insertR* n o (cdr l)))])]
-        [else (cons (insertR* n o (car l))
-                    (insertR* n o (cdr l)))]))
-
-(check-equal? (insertR* "second" "first" (list "first")) (list "first" "second"))
-(check-equal? (insertR* 2 1 (list (list (list 1)))) (list (list (list 1 2))))
-
-(define (occur* a l)
-  (cond [(null? l) 0]
-        [(atom? (car l))
-         (cond [(eqan? (car l) a) (+ 1 (occur* a (cdr l)))]
-               [else (occur* a (cdr l))])]
-        [else (+ (occur* a (car l))
-                 (occur* a (cdr l)))]))
-
-(check-equal? (occur* 1 (list 1)) 1)
-(check-equal? (occur* 1 (list (list 1))) 1)
-
-
-;(define (subst n o loa)
-;  (cond [(null? loa) empty]
-;        [(eq? o (car loa)) (cons n (cdr loa))]
-;        [else (cons (car loa) (subst n o (cdr loa)))]))
-;
-
-(define (subst* n o l)
-  (cond [(null? l) empty]
-        [(atom? (car l))
-         (cond [(eq? o (car l)) (cons n (subst* n o (cdr l)))]
-               [else (cons (car l) (subst* n o (cdr l)))])]
-        [else (cons (subst* n o (car l))
-                    (subst* n o (cdr l)))]))
-
-(check-equal? (subst* "new" "old" (list "old")) (list "new"))
-(check-equal? (subst* "new" "old" (list (list (list "old")))) (list (list (list "new"))))
+(check-equal? (my-greater-than 3 3) false)
