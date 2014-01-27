@@ -244,9 +244,72 @@
 (check-equal? (tup+ (list 3 6 9 11 4)
                     (list 8 5 2 0 7)) (list 11 11 11 11 11))
 
-(define (my-greater-than a b)
+(define (>^ a b)
   (cond [(zero? a) false] 
         [(zero? b) true]
-        [else (my-greater-than (sub1 a) (sub1 b))]))
+        [else (>^ (sub1 a) (sub1 b))]))
 
-(check-equal? (my-greater-than 3 3) false)
+(check-equal? (>^ 3 3) false)
+(check-equal? (>^ 4 1) true)
+
+(define (<^ a b)
+  (cond [(zero? b) false]
+        [(zero? a) true]
+        [else (<^ (sub1 a) (sub1 b))]))
+
+(check-equal? (<^ 0 0) false)
+(check-equal? (<^ 1 3) true)
+(check-equal? (<^ 4 1) false)
+
+(define (=^ a b)
+  (cond [(>^ a b) false]
+        [(<^ a b) false]
+        [else true]))
+
+(check-equal? (=^ 0 0) true)
+(check-equal? (=^ 1 1) true)
+(check-equal? (=^ 2 3) false)
+(check-equal? (=^ 12 0) false)
+
+[define (pow^ a b)
+  (cond [(zero? b) 1]
+        [else (my-mult a (pow^ a (sub1 b)))])]
+
+(check-equal? (pow^ 0 1) 0)
+(check-equal? (pow^ 2 3) 8)
+(check-equal? (pow^ 4 5) 1024)
+
+(define (div^ a b)
+  (cond [(<^ a b) 0]
+        [else (add1 (div^ (my-minus a b) b))]))
+
+(check-equal? (div^ 15 4) 3)
+
+(define (length^ lat)
+  (cond [(empty? lat) 0]
+        [else (add1 (length^ (rest lat)))]))
+
+(check-equal? (length^ empty) 0)
+(check-equal? (length^ (list 'a)) 1)
+(check-equal? (length^ (list 'a 'b)) 2)
+(check-equal? (length^ (list 'a 'b 'c)) 3)
+
+(define (pick n lat)
+  (cond [(zero? (sub1 n)) (car lat)]
+        [else (pick (sub1 n) (rest lat))]))
+
+(check-equal? (pick 4 (list 'lasagna 'spaghetti 'ravioli 'macaroni 'meatball)) 'macaroni)
+
+(define (rempick n lat)
+  (cond [(zero? (sub1 n)) (cdr lat)]
+        [else (cons (car lat)
+                    (rempick (sub1 n) (rest lat)))]))
+
+(check-equal? (rempick 3 (list 'hotdogs 'with 'hot 'mustard)) (list 'hotdogs 'with 'mustard) '(list 'hotdogs 'with 'mustard))
+
+(define (number^? x)
+  (cond b))
+
+(check-equal? (number^? 'x) false)
+(check-equal? (number^? '0) true)
+(check-equal? (number^? '4) true)
