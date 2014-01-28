@@ -307,9 +307,37 @@
 
 (check-equal? (rempick 3 (list 'hotdogs 'with 'hot 'mustard)) (list 'hotdogs 'with 'mustard) '(list 'hotdogs 'with 'mustard))
 
-(define (number^? x)
-  (cond b))
+(define (no-nums lat)
+  (cond [(empty? lat) empty]
+        [(number? (first lat)) (no-nums (rest lat))]
+        [else (cons (car lat) (no-nums (rest lat)))]))
 
-(check-equal? (number^? 'x) false)
-(check-equal? (number^? '0) true)
-(check-equal? (number^? '4) true)
+(check-equal? (no-nums (list 1 3 'x 'b 5 'z 'b))
+              (list 'x 'b 'z 'b))
+
+(define (all-nums lat)
+  (cond [(empty? lat) empty]
+        [(number? (first lat)) (cons (car lat) (all-nums (rest lat)))]
+        [else (all-nums (rest lat))]))
+
+(check-equal? (all-nums (list 1 3 'x 'b 5 'z 'b))
+              (list 1 3 5))
+
+(define (occur a lat)
+  (cond [(empty? lat) 0]
+        [(eq? a (first lat)) (add1 (occur a (rest lat)))]
+        [else (occur a (rest lat))]))
+
+(check-equal? (occur 'b (list 'x '2 'x '5 'x)) 0)
+(check-equal? (occur 'x (list 'x '2 'x '5 'x)) 3)
+
+(define (one? a)
+  (= 1 a))
+
+(define (rempick^ a lat)
+  (cond [(empty? lat) empty]
+        [(one? a) (cdr lat)]
+        [else (cons (first lat)(rempick^ (sub1 a) (rest lat)))]))
+
+(check-equal? (rempick^ 3 (list 'lemon 'meringue 'salty 'pie))
+              (list 'lemon 'meringue 'pie))
