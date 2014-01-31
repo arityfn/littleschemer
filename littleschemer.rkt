@@ -341,3 +341,65 @@
 
 (check-equal? (rempick^ 3 (list 'lemon 'meringue 'salty 'pie))
               (list 'lemon 'meringue 'pie))
+
+                ;; 5. *Oh My Gawd*: Its Full Of Stars
+
+(define (rember* a l)
+  (cond [(empty? l) empty]
+        [(atom? (first l))
+         (cond [(eq? (first l) a) (rember* a (rest l))]
+               [else (cons (first l) (rember* a (rest l)))])]
+        [else (cons (rember* a (first l))
+                    (rember* a (rest l)))]))
+
+(check-equal? (rember* 'x empty) empty)
+(check-equal? (rember* 'x (list 'x (list 'x (list (list 'x)))))
+              (list(list(list(list)))))
+
+(define (insertR* new old l)
+  (cond [(empty? l) empty]
+        [(atom? (first l))
+         (cond [(eq? old (first l)) (cons old (cons new (rest l)))]
+               [else (cons (first l) (insertR* new old (rest l)))])]
+        [else (cons (insertR* new old (first l))
+                    (insertR* new old (rest l)))]))
+
+(check-equal? (insertR* 'y 'x (list 'x 'z)) (list 'x 'y 'z))
+(check-equal? (insertR* 'y 'x (list (list (list 'x 'z))))
+              (list (list (list 'x 'y 'z))))
+
+;; The First Commandment
+;; final version
+;; When recurring on a list of atoms, lat, ask two questions
+;; about it: (null? lat) and else.
+;; when recurring on a number, n, ask two questions about it:
+;; (zero? n) and else.
+;; when recurring on alist of S-expressios, l, ask three questions
+;; about it: (null? l), (atom? (car l)), and else.
+
+;; The Fourth Commandment
+;; final version
+;; Always change at least one argument while recurring.
+;; When recurring on a list of atoms, lat, use (cdr lat). When
+;; recurring on a number, n, use (sub1 n). And when reucurring
+;; on a list of S-expresions, l, use (car l) and (cdr l) if neither
+;; (null? l) nor (atom? (car l) are true.
+
+;; it must be changed to be close to termination. The changing
+;; argument must be tested in the termination condition:
+
+;; when using cdr, test termination with null? and
+;; when using sub1, test termination with zero?
+
+(define (occur* a l)
+  (cond [(empty? l) 0]
+        [(atom? (first l))
+         (cond [(eq? a (first l)) (add1 (occur* a (rest l)))]
+               [else (occur* a (rest l))])]
+        [else (my-add (occur* a (first l))
+                      (occur* a (rest l)))]))
+
+(check-equal? (occur* 'x empty) 0)
+(check-equal? (occur* 'x (list 'x)) 1)
+(check-equal? (occur* 'x (list (list 'x))) 1)
+(check-equal? (occur* 'x (list (list (list (list 'x))))) 1)
